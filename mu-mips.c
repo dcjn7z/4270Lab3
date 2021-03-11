@@ -327,6 +327,19 @@ void handle_pipeline()
 void WB()
 {
 	/*IMPLEMENT THIS*/
+	if(MEM_WB.IR!=0)
+	{
+	}
+	
+
+	
+	EX_MEM.PC=MEM_WB.PC;
+	EX_MEM.IR=MEM_WB.IR;
+	EX_MEM.A=MEM_WB.A;
+	EX_MEM.B=MEM_WB.B;
+	EX_MEM.imm=MEM_WB.imm;
+	EX_MEM.ALU.
+	
 }
 
 /************************************************************/
@@ -335,6 +348,7 @@ void WB()
 void MEM()
 {
 	/*IMPLEMENT THIS*/
+	
 }
 
 /************************************************************/
@@ -343,6 +357,7 @@ void MEM()
 void EX()
 {
 	/*IMPLEMENT THIS*/
+	
 }
 
 /************************************************************/
@@ -351,6 +366,7 @@ void EX()
 void ID()
 {
 	/*IMPLEMENT THIS*/
+	
 }
 
 /************************************************************/
@@ -359,6 +375,7 @@ void ID()
 void IF()
 {
 	/*IMPLEMENT THIS*/
+	
 }
 
 

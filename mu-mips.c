@@ -384,6 +384,24 @@ void print_program(){
 /************************************************************/
 void show_pipeline(){
 	/*IMPLEMENT THIS*/
+	printf("CURRENT PC:\t%d\n",CURRENT_STATE.PC);
+	printf("IF/ID.IR\t%d\t%s\n",ID_IF.IR,print_program(ID_IF.IR));
+	printf("IF/ID.PC\t%d\t%s\n",ID_IF.PC);
+	printf("\n");
+	printf("ID/EX.IR\t%d\t%s\n",IF_EX.IR,print_program(ID_IF.IR));
+	printf("ID/EX.A\t%d\n",IF_EX.A);
+	printf("ID/EX.B\t%d\n",IF_EX.B);
+	printf("ID/EX.imm\t%d\n",IF_EX.imm);
+	printf("\n");
+	printf("EX/MEM.IR\t%d\n",EX_MEM.IR);
+	printf("EX/MEM.A\t%d\n",EX_MEM.A);
+	printf("EX/MEM.B\t%d\n",EX_MEM.B);
+	printf("EX/MEM.ALUOutput\t%d\n",EX_MEM.ALUOutput);
+	printf("\n");
+	printf("MEM/WB.IR\t%d\n",MEM_WB.IR);
+	printf("MEM/WB.IR\t%d\n",MEM_WB.ALUOutput);
+	printf("MEM/WB.LMD\t%d\n",MEM_WB.LMD);
+	printf("\n");
 }
 
 /***************************************************************/

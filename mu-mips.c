@@ -366,6 +366,10 @@ void EX()
 void ID()
 {
 	/*IMPLEMENT THIS*/
+	rs = (instruction & 0x03E00000) >> 21;
+	rt = (instruction & 0x001F0000) >> 16;
+	ID_IF.A = rs;
+	ID_IF.B = rt;
 	
 }
 
@@ -375,7 +379,8 @@ void ID()
 void IF()
 {
 	/*IMPLEMENT THIS*/
-	
+	ID_IF.IR = mem_read_32(CURRENT_STATE.PC);
+	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 }
 
 

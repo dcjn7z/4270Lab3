@@ -360,8 +360,11 @@ void EX()
 	
 	//Memroy Reference (load/store)
 	//ALUOutput <= A + imm
-	ALUOutput = ID_IF.A + ID_IF.imm;
+	IF_EX.ALUOutput = ID_IF.A + ID_IF.imm;
 	
+	//Register-register Operation
+	//ALUOutput <= A op B
+	IF_EX.ALUOutput = ID_IF.A + ID_IF.B;
 }
 
 /************************************************************/
@@ -371,13 +374,13 @@ void ID()
 {
 	/*IMPLEMENT THIS*/
 	uint32_t instruction;
-	instruction = mem_read_32(CURRENT_STATE.PC);
-	
+	IF_EX = ID_IF
 	rs = (instruction & 0x03E00000) >> 21;
 	rt = (instruction & 0x001F0000) >> 16;
 	immediate = instruction & 0x0000FFFF;
-	ID_IF.A = rs;
-	ID_IF.B = rt;
+	ID_IF.A = CURRENT_STATE.REGS[rs];
+	ID_IF.B = CURRENT_STATE.REGS[rt];
+	
 	ID_IF.imm = 
 }
 

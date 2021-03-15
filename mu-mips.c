@@ -354,13 +354,11 @@ void WB()
 				NEXT_STATE.REGS[rd] = output;
 				break;
 			case 0x11: //MTHI
-				NEXT_STATE.REGS[rd] = output;
 				break;
 			case 0x12: //MFLO
 				NEXT_STATE.REGS[rd] = output;
 				break;
 			case 0x13: //MTLO
-				NEXT_STATE.REGS[rd] = output;
 				break;
 			case 0x18: //MULT
 				NEXT_STATE.REGS[rd] = output;
@@ -422,6 +420,8 @@ void WB()
 		}
 	}
 	
+	INSTRUCTION_COUNT++;
+	
 }
 
 /************************************************************/
@@ -434,28 +434,26 @@ void MEM()
 	opcode = (instruction & 0xFC000000) >> 26;
 	b = EX_MEM.B;
 	alu = EX_MEM.ALUOutput;
-
-if(opcode == 0x00){
-	}
-	else{
-		switch(opcode){
+	output=0;
+	
+	switch(opcode){
 			case 0x20: //LB
-				output = mem_read_32(alu)
+				output = mem_read_32(alu);
 				break;
 			case 0x21: //LH
-				output = mem_read_32(alu)
+				output = mem_read_32(alu);
 				break;
 			case 0x23: //LW
-				output = mem_read_32(alu)
+				output = mem_read_32(alu);
 				break;
 			case 0x28: //SB
-				mem_write_32(alu) = b;				
+				mem_write_32(alu,b);				
 				break;
 			case 0x29: //SH
-				mem_write_32(alu) = b;				
+				mem_write_32(alu,b);				
 				break;
 			case 0x2B: //SW
-				mem_write_32(alu) = b;				
+				mem_write_32(alu,b);				
 				break;
 			default:
 				// put more things here
@@ -473,7 +471,7 @@ if(opcode == 0x00){
 /************************************************************/
 void EX()
 {
-<<<<<<< HEAD
+
 	uint32_t instruction, immediate, opcode, function, output, sa;
 	instruction = IF_EX.IR;
 	a = IF_EX.A;
@@ -507,16 +505,16 @@ if(opcode == 0x00){
 				}
 				break;
 			case 0x10: //MFHI
-				NEXT_STATE.REGS[rd] = CURRENT_STATE.HI;
+				output = CURRENT_STATE.HI;
 				break;
 			case 0x11: //MTHI
-				NEXT_STATE.HI = CURRENT_STATE.REGS[rs];
+				NEXT_STATE.HI = a;
 				break;
 			case 0x12: //MFLO
-				NEXT_STATE.REGS[rd] = CURRENT_STATE.LO;
+				output = CURRENT_STATE.LO;
 				break;
 			case 0x13: //MTLO
-				NEXT_STATE.LO = CURRENT_STATE.REGS[rs];
+				NEXT_STATE.LO = a;
 				break;
 			case 0x18: //MULT
 				if ((a & 0x80000000) == 0x80000000){
@@ -539,17 +537,17 @@ if(opcode == 0x00){
 				NEXT_STATE.HI = (product & 0XFFFFFFFF00000000)>>32;
 				break;
 			case 0x1A: //DIV 
-				if(CURRENT_STATE.REGS[rt] != 0)
+				if(b != 0)
 				{
 					NEXT_STATE.LO = (int32_t)a / (int32_t)b;
 					NEXT_STATE.HI = (int32_t)a % (int32_t)b;
 				}
 				break;
 			case 0x1B: //DIVU
-				if(CURRENT_STATE.REGS[rt] != 0)
+				if(b != 0)
 				{
-					NEXT_STATE.LO = CURRENT_STATE.REGS[rs] / CURRENT_STATE.REGS[rt];
-					NEXT_STATE.HI = CURRENT_STATE.REGS[rs] % CURRENT_STATE.REGS[rt];
+					NEXT_STATE.LO = a / b;
+					NEXT_STATE.HI = a % b;
 				}
 				break;
 			case 0x20: //ADD
@@ -622,194 +620,6 @@ if(opcode == 0x00){
 	EX_MEM.IR = instruction;
 	EX_MEM.B = b;
 	EX_MEM.ALUOutput = output;
-=======
-	/*IMPLEMENT THIS*/
-	//CHAN KIM
-	
-	//Memroy Reference (load/store)
-	//ALUOutput <= A + imm
-	IF_EX.ALUOutput = ID_IF.A + ID_IF.imm;
-	
-	//Register-register Operation
-	//ALUOutput <= A op B
-	IF_EX.ALUOutput = ID_IF.A + ID_IF.B;
-	if(opcode == 0x00){
-		switch(function){
-			case 0x00: //SLL
-				IF_EX.ALUOutput = ID_IF.B << sa;
-				break;
-			case 0x02: //SRL
-				IF_EX.ALUOutput = ID_IF.B << sa;
-				break;
-			case 0x03: //SRA
-				if ((ID_IF.B & 0x80000000) == 1)
-				{
-					IF_EX.ALUOutput = ~(~ID_IF.B >> sa);
-				}
-				else
-				{
-					IF_EX.ALUOutput = ID_IF.B >> sa;
-				}
-			case 0x0C: //SYSCALL
-				//if(CURRENT_STATE.REGS[2] == 0xa)
-				if(ID_IF.REGS[2] == 0xa)
-				{
-					RUN_FLAG = FALSE;	
-				}
-			case 0x10: //MFHI
-				//NEXT_STATE.REGS[rd] = CURRENT_STATE.HI;
-				IF_EX.C = ID_IF.HI;
-				break;
-			case 0x11: //MTHI
-				IF_EX.HI = ID_IF.A;
-				break;
-			case 0x12: //MFLO
-				IF_EX.C = ID_IF.LO;
-				break;
-			case 0x13: //MTLO
-				IF_EX.LO = ID_IF.A;
-				break;
-			case 0x18: //MULT
-				if ((ID_IF.A & 0x80000000) == 0x80000000)
-				{
-					p1 = 0xFFFFFFFF00000000 | ID_IF.A;	
-				}
-				else
-				{
-					p1 = 0x00000000FFFFFFFF & ID_IF.A;	
-				}
-				if ((ID_IF.B & 0x80000000) == 0x80000000)
-				{
-					p2 = 0xFFFFFFFF00000000 | ID_IF.B;
-				}
-				else
-				{
-					p2 = 0x00000000FFFFFFFF & ID_IF.B;
-				}
-				product = p1 * p2;
-				IF_EX.LO = (product & 0X00000000FFFFFFFF);
-				IF_EX.HI = (product & 0XFFFFFFFF00000000)>>32;
-				break;
-			case 0x19: //MULTU
-				product = (uint64_t)ID_IF.A * (uint64_t)ID_IF.B
-				IF_EX.LO = (product & 0X00000000FFFFFFFF);
-				IF_EX.HI = (product & 0XFFFFFFFF00000000)>>32;
-				break;
-			case 0x1A: //DIV
-				if(ID_IF.B != 0)
-				{
-					IF_EX.LO = (int32_t)ID_IF.A / (int32_t)ID_IF.B;
-					IF_EX.HI = (int32_t)ID_IF.A % (int32_t)ID_IF.B;
-				}
-				break;
-			case 0x1B: //DIVU
-				if(ID_IF.B !=0)
-				{	
-					IF_EX.LO = ID_IF.A / ID_IF.B;
-					IF_EX.HI = ID_IF.A % ID_IF.B;
-				}
-				break;
-			case 0x20: //ADD
-				//NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
-				IF_EX.C = ID_IF.A + ID_IF.B;
-				break;
-			case 0x21: //ADDU
-				IF_EX.C = ID_IF.B + ID_IF.A;
-				break;
-			case 0x22: //SUB
-				IF_EX.C = ID_IF.A - ID_IF.B;
-				break;
-			case 0x23: //SUBU
-				IF_EX.C = ID_IF.A - ID_IF.B;
-				break;
-			case 0x24: //AND
-				IF_EX.C = ID_IF.A & ID_IF.B;
-				break;
-			case 0x25: //OR
-				IF_EX.C = ID_IF.A | ID_IF.B;
-				break;
-			case 0x27: //NOR
-				IF_EX.C = ~(ID_IF.A | ID_IF.B);
-				break;
-			case 0x2A: //SLT
-				if(ID_IF.A < ID_IF.B)
-				{
-					IF_EX.C = 0x0;	
-				}
-				else
-				{
-					IF_EX.C = 0x0;	
-				}
-				break;
-			default:
-				printf("Instruction at 0x%x is not implemented!\n" CURRENT_STATE.PC, 
-				break;
-		}	
-	}
-	//tch(opcode)
-	else
-	{
-		switch(opcode){
-			case 0x08: //ADDI
-				IF_EX.B = ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF));
-				break;
-			case 0x09: //ADDIU
-				IF_EX.B = ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF));
-				break;
-			case 0x0A: //SLTI
-				if (( (int32_t)ID_IF.A - (int32_t)( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF))) < 0)
-				{
-					IF_EX.B = 0x1;	
-				}
-				else
-				{
-					IF_EX.B = 0x0;
-				}
-				break;
-			case 0x0C: //ANDI
-				IF_EX.B = ID_IF.A & (immediate & 0x0000FFFF);
-				break;
-			case 0x0D: //ORI
-				IF_EX.B = ID_IF.A | (immediate & 0x0000FFFF);
-				break;
-			case 0x0E: //XORI
-				IF_EX.B = ID_IF.A ^ (immediate & 0x0000FFFF);
-				break;
-			case 0x0F: //LUI
-				IF_EX.B = immediate << 16;
-				break;
-			case 0x20 //LB
-				data = mem_read_32(ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF)) );
-				IF_EX.B = ((data & 0x000000FF) & 0x80) > 0 ? (data | 0xFFFFFF00) : (data & 0x000000FF);
-				break;
-			case 0x21: //LH
-				data = mem_read_32(ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF)) );
-				IF_EX.B = ((data & 0x0000FFFF) & 0x8000) > 0 ? (data | 0xFFFF0000) : (data & 0x0000FFFF);
-				break;
-			case 0x23: //LW
-				IF_EX.B = mem_read_32(ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF)) );
-				break;
-			case 0x28: //SB
-				addr = ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF));
-				data = mem_read_32(addr);
-				data = (data & 0xFFFFFF00) | (ID_IF.B & 0x000000FF);
-				mem_write_32(addr,data);
-				break;
-			case 0x29: //SH
-				addr = ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF));
-				data = mem_read_32(addr);
-				data = (data & 0xFFFF0000) | (ID_IF.B & 0x0000FFFF);
-				mem_write_32(addr,data);
-				break;
-			case 0x2B: //SW
-				addr = ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF));
-				mem_write_32(addr, ID_IF.B);
-				break;
-			default:
-				printf("Instruction at 0x%x is not implemented!\n", CURRENT_STATE.PC);
-				break;
-				
->>>>>>> a619aeea459ca6f1b98bf5666543e111d8d300e0
 }
 
 /************************************************************/
@@ -817,8 +627,6 @@ if(opcode == 0x00){
 /************************************************************/
 void ID()
 {
-<<<<<<< HEAD
-	
 	uint32_t instruction, rs, rt, immediate;
 	instruction = ID_IF.IR;
 	
@@ -836,19 +644,6 @@ void ID()
 	IF_EX.B=CURRENT_STATE.REGS[rt];
 	IF_EX.IR = instruction;
 	IF_EX.imm = immediate;
-
-=======
-	/*IMPLEMENT THIS*/
-	uint32_t instruction;
-	IF_EX = ID_IF
-	rs = (instruction & 0x03E00000) >> 21;
-	rt = (instruction & 0x001F0000) >> 16;
-	immediate = instruction & 0x0000FFFF;
-	ID_IF.A = CURRENT_STATE.REGS[rs];
-	ID_IF.B = CURRENT_STATE.REGS[rt];
-	
-	ID_IF.imm = 
->>>>>>> a619aeea459ca6f1b98bf5666543e111d8d300e0
 }
 
 /************************************************************/
@@ -875,19 +670,527 @@ void initialize() {
 /* Print the program loaded into memory (in MIPS assembly format)    */ 
 /************************************************************/
 void print_program(){
-	/*IMPLEMENT THIS*/
+	uint32_t instruction, opcode, function, rs, rt, rd, sa, immediate, target;
+	
+	instruction = mem_read_32(CURRENT.STATE.PC);
+	
+	opcode = (instruction & 0xFC000000) >> 26;
+	function = instruction & 0x0000003F;
+	rs = (instruction & 0x03E00000) >> 21;
+	rt = (instruction & 0x001F0000) >> 16;
+	rd = (instruction & 0x0000F800) >> 11;
+	sa = (instruction & 0x000007C0) >> 6;
+	immediate = instruction & 0x0000FFFF;
+	target = instruction & 0x03FFFFFF;
+	int i=0;
+	
+	while (function != 0x0C){ 
+	if(opcode == 0x00){
+		/*R format instructions here*/
+		
+		switch(function){
+			case 0x00:
+				printf("SLL $r%u, $r%u, 0x%x\n", rd, rt, sa);
+				break;
+			case 0x02:
+				printf("SRL $r%u, $r%u, 0x%x\n", rd, rt, sa);
+				break;
+			case 0x03:
+				printf("SRA $r%u, $r%u, 0x%x\n", rd, rt, sa);
+				break;
+			case 0x08:
+				printf("JR $r%u\n", rs);
+				break;
+			case 0x09:
+				if(rd == 31){
+					printf("JALR $r%u\n", rs);
+				}
+				else{
+					printf("JALR $r%u, $r%u\n", rd, rs);
+				}
+				break;
+			case 0x0C:
+				printf("SYSCALL\n");
+				break;
+			case 0x10:
+				printf("MFHI $r%u\n", rd);
+				break;
+			case 0x11:
+				printf("MTHI $r%u\n", rs);
+				break;
+			case 0x12:
+				printf("MFLO $r%u\n", rd);
+				break;
+			case 0x13:
+				printf("MTLO $r%u\n", rs);
+				break;
+			case 0x18:
+				printf("MULT $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x19:
+				printf("MULTU $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x1A:
+				printf("DIV $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x1B:
+				printf("DIVU $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x20:
+				printf("ADD $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x21:
+				printf("ADDU $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x22:
+				printf("SUB $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x23:
+				printf("SUBU $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x24:
+				printf("AND $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x25:
+				printf("OR $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x26:
+				printf("XOR $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x27:
+				printf("NOR $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x2A:
+				printf("SLT $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			default:
+				printf("Instruction is not implemented!\n");
+				break;
+		}
+	}
+	else{
+		switch(opcode){
+			case 0x01:
+				if(rt == 0){
+					printf("BLTZ $r%u, 0x%x\n", rs, immediate<<2);
+				}
+				else if(rt == 1){
+					printf("BGEZ $r%u, 0x%x\n", rs, immediate<<2);
+				}
+				break;
+			case 0x02:
+				printf("J 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				break;
+			case 0x03:
+				printf("JAL 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				break;
+			case 0x04:
+				printf("BEQ $r%u, $r%u, 0x%x\n", rs, rt, immediate<<2);
+				break;
+			case 0x05:
+				printf("BNE $r%u, $r%u, 0x%x\n", rs, rt, immediate<<2);
+				break;
+			case 0x06:
+				printf("BLEZ $r%u, 0x%x\n", rs, immediate<<2);
+				break;
+			case 0x07:
+				printf("BGTZ $r%u, 0x%x\n", rs, immediate<<2);
+				break;
+			case 0x08:
+				printf("ADDI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x09:
+				printf("ADDIU $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0A:
+				printf("SLTI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0C:
+				printf("ANDI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0D:
+				printf("ORI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0E:
+				printf("XORI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0F:
+				printf("LUI $r%u, 0x%x\n", rt, immediate);
+				break;
+			case 0x20:
+				printf("LB $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x21:
+				printf("LH $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x23:
+				printf("LW $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x28:
+				printf("SB $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x29:
+				printf("SH $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x2B:
+				printf("SW $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			default:
+				printf("Instruction is not implemented!\n");
+				break;
+		}
+	}
+	i++;
+	instruction = mem_read_32(CURRENT.STATE.PC + (4*i));
+	}
+	printf("SYSCALL\n");
 }
 
 /************************************************************/
 /* Print the current pipeline                                                                                    */ 
 /************************************************************/
 void show_pipeline(){
-	/*IMPLEMENT THIS*/
+	uint32_t instruction, opcode, function, rs, rt, rd, sa, immediate, target;
+	
+	char if_id[64];
+	char id_ex[64];
+		
+	instruction = mem_read_32(ID_IF.IR);
+	opcode = (instruction & 0xFC000000) >> 26;
+	function = instruction & 0x0000003F;
+	rs = (instruction & 0x03E00000) >> 21;
+	rt = (instruction & 0x001F0000) >> 16;
+	rd = (instruction & 0x0000F800) >> 11;
+	sa = (instruction & 0x000007C0) >> 6;
+	immediate = instruction & 0x0000FFFF;
+	target = instruction & 0x03FFFFFF;
+	
+	if(opcode == 0x00){
+		/*R format instructions here*/
+		
+		switch(function){
+			case 0x00:
+				snprintf(if_id,64,"SLL $r%u, $r%u, 0x%x\n", rd, rt, sa);
+				break;
+			case 0x02:
+				snprintf(if_id,64,"SRL $r%u, $r%u, 0x%x\n", rd, rt, sa);
+				break;
+			case 0x03:
+				snprintf(if_id,64,"SRA $r%u, $r%u, 0x%x\n", rd, rt, sa);
+				break;
+			case 0x08:
+				snprintf(if_id,64,"JR $r%u\n", rs);
+				break;
+			case 0x09:
+				if(rd == 31){
+					snprintf(if_id,64,"JALR $r%u\n", rs);
+				}
+				else{
+					snprintf(if_id,64,"JALR $r%u, $r%u\n", rd, rs);
+				}
+				break;
+			case 0x0C:
+				snprintf(if_id,64,"SYSCALL\n");
+				break;
+			case 0x10:
+				snprintf(if_id,64,"MFHI $r%u\n", rd);
+				break;
+			case 0x11:
+				snprintf(if_id,64,"MTHI $r%u\n", rs);
+				break;
+			case 0x12:
+				snprintf(if_id,64,"MFLO $r%u\n", rd);
+				break;
+			case 0x13:
+				snprintf(if_id,64,"MTLO $r%u\n", rs);
+				break;
+			case 0x18:
+				snprintf(if_id,64,"MULT $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x19:
+				snprintf(if_id,64,"MULTU $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x1A:
+				snprintf(if_id,64,"DIV $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x1B:
+				snprintf(if_id,64,"DIVU $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x20:
+				snprintf(if_id,64,"ADD $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x21:
+				snprintf(if_id,64,"ADDU $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x22:
+				snprintf(if_id,64,"SUB $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x23:
+				snprintf(if_id,64,"SUBU $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x24:
+				snprintf(if_id,64,"AND $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x25:
+				snprintf(if_id,64,"OR $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x26:
+				snprintf(if_id,64,"XOR $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x27:
+				snprintf(if_id,64,"NOR $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x2A:
+				snprintf(if_id,64,"SLT $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			default:
+				snprintf(if_id,64,"Instruction is not implemented!\n");
+				break;
+		}
+	}
+	else{
+		switch(opcode){
+			case 0x01:
+				if(rt == 0){
+					snprintf(if_id,64,"BLTZ $r%u, 0x%x\n", rs, immediate<<2);
+				}
+				else if(rt == 1){
+					snprintf(if_id,64,"BGEZ $r%u, 0x%x\n", rs, immediate<<2);
+				}
+				break;
+			case 0x02:
+				snprintf(if_id,64,"J 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				break;
+			case 0x03:
+				snprintf(if_id,64,"JAL 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				break;
+			case 0x04:
+				snprintf(if_id,64,"BEQ $r%u, $r%u, 0x%x\n", rs, rt, immediate<<2);
+				break;
+			case 0x05:
+				snprintf(if_id,64,"BNE $r%u, $r%u, 0x%x\n", rs, rt, immediate<<2);
+				break;
+			case 0x06:
+				snprintf(if_id,64,"BLEZ $r%u, 0x%x\n", rs, immediate<<2);
+				break;
+			case 0x07:
+				snprintf(if_id,64,"BGTZ $r%u, 0x%x\n", rs, immediate<<2);
+				break;
+			case 0x08:
+				snprintf(if_id,64,"ADDI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x09:
+				snprintf(if_id,64,"ADDIU $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0A:
+				snprintf(if_id,64,"SLTI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0C:
+				snprintf(if_id,64,"ANDI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0D:
+				snprintf(if_id,64,"ORI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0E:
+				snprintf(if_id,64,"XORI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0F:
+				snprintf(if_id,64,"LUI $r%u, 0x%x\n", rt, immediate);
+				break;
+			case 0x20:
+				snprintf(if_id,64,"LB $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x21:
+				snprintf(if_id,64,"LH $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x23:
+				snprintf(if_id,64,"LW $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x28:
+				snprintf(if_id,64,"SB $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x29:
+				snprintf(if_id,64,"SH $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x2B:
+				snprintf(if_id,64,"SW $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			default:
+				snprintf(if_id,64,"Instruction is not implemented!\n");
+				break;
+		}
+	}
+	
+	instruction = mem_read_32(IF_EX.IR);
+	opcode = (instruction & 0xFC000000) >> 26;
+	function = instruction & 0x0000003F;
+	rs = (instruction & 0x03E00000) >> 21;
+	rt = (instruction & 0x001F0000) >> 16;
+	rd = (instruction & 0x0000F800) >> 11;
+	sa = (instruction & 0x000007C0) >> 6;
+	immediate = instruction & 0x0000FFFF;
+	target = instruction & 0x03FFFFFF;
+	
+	if(opcode == 0x00){
+		/*R format instructions here*/
+		
+		switch(function){
+			case 0x00:
+				snprintf(id_ex,64,"SLL $r%u, $r%u, 0x%x\n", rd, rt, sa);
+				break;
+			case 0x02:
+				snprintf(id_ex,64,"SRL $r%u, $r%u, 0x%x\n", rd, rt, sa);
+				break;
+			case 0x03:
+				snprintf(id_ex,64,"SRA $r%u, $r%u, 0x%x\n", rd, rt, sa);
+				break;
+			case 0x08:
+				snprintf(id_ex,64,"JR $r%u\n", rs);
+				break;
+			case 0x09:
+				if(rd == 31){
+					snprintf(id_ex,64,"JALR $r%u\n", rs);
+				}
+				else{
+					snprintf(id_ex,64,"JALR $r%u, $r%u\n", rd, rs);
+				}
+				break;
+			case 0x0C:
+				snprintf(id_ex,64,"SYSCALL\n");
+				break;
+			case 0x10:
+				snprintf(id_ex,64,"MFHI $r%u\n", rd);
+				break;
+			case 0x11:
+				snprintf(id_ex,64,"MTHI $r%u\n", rs);
+				break;
+			case 0x12:
+				snprintf(id_ex,64,"MFLO $r%u\n", rd);
+				break;
+			case 0x13:
+				snprintf(id_ex,64,"MTLO $r%u\n", rs);
+				break;
+			case 0x18:
+				snprintf(id_ex,64,"MULT $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x19:
+				snprintf(id_ex,64,"MULTU $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x1A:
+				snprintf(id_ex,64,"DIV $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x1B:
+				snprintf(id_ex,64,"DIVU $r%u, $r%u\n", rs, rt);
+				break;
+			case 0x20:
+				snprintf(id_ex,64,"ADD $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x21:
+				snprintf(id_ex,64,"ADDU $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x22:
+				snprintf(id_ex,64,"SUB $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x23:
+				snprintf(id_ex,64,"SUBU $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x24:
+				snprintf(id_ex,64,"AND $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x25:
+				snprintf(id_ex,64,"OR $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x26:
+				snprintf(id_ex,64,"XOR $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x27:
+				snprintf(id_ex,64,"NOR $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			case 0x2A:
+				snprintf(id_ex,64,"SLT $r%u, $r%u, $r%u\n", rd, rs, rt);
+				break;
+			default:
+				snprintf(id_ex,64,"Instruction is not implemented!\n");
+				break;
+		}
+	}
+	else{
+		switch(opcode){
+			case 0x01:
+				if(rt == 0){
+					snprintf(id_ex,64,"BLTZ $r%u, 0x%x\n", rs, immediate<<2);
+				}
+				else if(rt == 1){
+					snprintf(id_ex,64,"BGEZ $r%u, 0x%x\n", rs, immediate<<2);
+				}
+				break;
+			case 0x02:
+				snprintf(id_ex,64,"J 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				break;
+			case 0x03:
+				snprintf(id_ex,64,"JAL 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				break;
+			case 0x04:
+				snprintf(id_ex,64,"BEQ $r%u, $r%u, 0x%x\n", rs, rt, immediate<<2);
+				break;
+			case 0x05:
+				snprintf(id_ex,64,"BNE $r%u, $r%u, 0x%x\n", rs, rt, immediate<<2);
+				break;
+			case 0x06:
+				snprintf(id_ex,64,"BLEZ $r%u, 0x%x\n", rs, immediate<<2);
+				break;
+			case 0x07:
+				snprintf(id_ex,64,"BGTZ $r%u, 0x%x\n", rs, immediate<<2);
+				break;
+			case 0x08:
+				snprintf(id_ex,64,"ADDI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x09:
+				snprintf(id_ex,64,"ADDIU $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0A:
+				snprintf(id_ex,64,"SLTI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0C:
+				snprintf(id_ex,64,"ANDI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0D:
+				snprintf(id_ex,64,"ORI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0E:
+				snprintf(id_ex,64,"XORI $r%u, $r%u, 0x%x\n", rt, rs, immediate);
+				break;
+			case 0x0F:
+				snprintf(id_ex,64,"LUI $r%u, 0x%x\n", rt, immediate);
+				break;
+			case 0x20:
+				snprintf(id_ex,64,"LB $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x21:
+				snprintf(id_ex,64,"LH $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x23:
+				snprintf(id_ex,64,"LW $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x28:
+				snprintf(id_ex,64,"SB $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x29:
+				snprintf(id_ex,64,"SH $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			case 0x2B:
+				snprintf(id_ex,64,"SW $r%u, 0x%x($r%u)\n", rt, immediate, rs);
+				break;
+			default:
+				snprintf(id_ex,64,"Instruction is not implemented!\n");
+				break;
+		}
+	}
 	printf("CURRENT PC:\t%d\n",CURRENT_STATE.PC);
-	printf("IF/ID.IR\t%d\t%s\n",ID_IF.IR,print_program(ID_IF.IR));
+	printf("IF/ID.IR\t%d\t%s\n",ID_IF.IR,if_id);
 	printf("IF/ID.PC\t%d\t%s\n",ID_IF.PC);
 	printf("\n");
-	printf("ID/EX.IR\t%d\t%s\n",IF_EX.IR,print_program(ID_IF.IR));
+	printf("ID/EX.IR\t%d\t%s\n",IF_EX.IR,id_ex);
 	printf("ID/EX.A\t%d\n",IF_EX.A);
 	printf("ID/EX.B\t%d\n",IF_EX.B);
 	printf("ID/EX.imm\t%d\n",IF_EX.imm);

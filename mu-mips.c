@@ -624,6 +624,7 @@ if(opcode == 0x00){
 	EX_MEM.ALUOutput = output;
 =======
 	/*IMPLEMENT THIS*/
+	//CHAN KIM
 	
 	//Memroy Reference (load/store)
 	//ALUOutput <= A + imm
@@ -632,6 +633,182 @@ if(opcode == 0x00){
 	//Register-register Operation
 	//ALUOutput <= A op B
 	IF_EX.ALUOutput = ID_IF.A + ID_IF.B;
+	if(opcode == 0x00){
+		switch(function){
+			case 0x00: //SLL
+				IF_EX.ALUOutput = ID_IF.B << sa;
+				break;
+			case 0x02: //SRL
+				IF_EX.ALUOutput = ID_IF.B << sa;
+				break;
+			case 0x03: //SRA
+				if ((ID_IF.B & 0x80000000) == 1)
+				{
+					IF_EX.ALUOutput = ~(~ID_IF.B >> sa);
+				}
+				else
+				{
+					IF_EX.ALUOutput = ID_IF.B >> sa;
+				}
+			case 0x0C: //SYSCALL
+				//if(CURRENT_STATE.REGS[2] == 0xa)
+				if(ID_IF.REGS[2] == 0xa)
+				{
+					RUN_FLAG = FALSE;	
+				}
+			case 0x10: //MFHI
+				//NEXT_STATE.REGS[rd] = CURRENT_STATE.HI;
+				IF_EX.C = ID_IF.HI;
+				break;
+			case 0x11: //MTHI
+				IF_EX.HI = ID_IF.A;
+				break;
+			case 0x12: //MFLO
+				IF_EX.C = ID_IF.LO;
+				break;
+			case 0x13: //MTLO
+				IF_EX.LO = ID_IF.A;
+				break;
+			case 0x18: //MULT
+				if ((ID_IF.A & 0x80000000) == 0x80000000)
+				{
+					p1 = 0xFFFFFFFF00000000 | ID_IF.A;	
+				}
+				else
+				{
+					p1 = 0x00000000FFFFFFFF & ID_IF.A;	
+				}
+				if ((ID_IF.B & 0x80000000) == 0x80000000)
+				{
+					p2 = 0xFFFFFFFF00000000 | ID_IF.B;
+				}
+				else
+				{
+					p2 = 0x00000000FFFFFFFF & ID_IF.B;
+				}
+				product = p1 * p2;
+				IF_EX.LO = (product & 0X00000000FFFFFFFF);
+				IF_EX.HI = (product & 0XFFFFFFFF00000000)>>32;
+				break;
+			case 0x19: //MULTU
+				product = (uint64_t)ID_IF.A * (uint64_t)ID_IF.B
+				IF_EX.LO = (product & 0X00000000FFFFFFFF);
+				IF_EX.HI = (product & 0XFFFFFFFF00000000)>>32;
+				break;
+			case 0x1A: //DIV
+				if(ID_IF.B != 0)
+				{
+					IF_EX.LO = (int32_t)ID_IF.A / (int32_t)ID_IF.B;
+					IF_EX.HI = (int32_t)ID_IF.A % (int32_t)ID_IF.B;
+				}
+				break;
+			case 0x1B: //DIVU
+				if(ID_IF.B !=0)
+				{	
+					IF_EX.LO = ID_IF.A / ID_IF.B;
+					IF_EX.HI = ID_IF.A % ID_IF.B;
+				}
+				break;
+			case 0x20: //ADD
+				//NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
+				IF_EX.C = ID_IF.A + ID_IF.B;
+				break;
+			case 0x21: //ADDU
+				IF_EX.C = ID_IF.B + ID_IF.A;
+				break;
+			case 0x22: //SUB
+				IF_EX.C = ID_IF.A - ID_IF.B;
+				break;
+			case 0x23: //SUBU
+				IF_EX.C = ID_IF.A - ID_IF.B;
+				break;
+			case 0x24: //AND
+				IF_EX.C = ID_IF.A & ID_IF.B;
+				break;
+			case 0x25: //OR
+				IF_EX.C = ID_IF.A | ID_IF.B;
+				break;
+			case 0x27: //NOR
+				IF_EX.C = ~(ID_IF.A | ID_IF.B);
+				break;
+			case 0x2A: //SLT
+				if(ID_IF.A < ID_IF.B)
+				{
+					IF_EX.C = 0x0;	
+				}
+				else
+				{
+					IF_EX.C = 0x0;	
+				}
+				break;
+			default:
+				printf("Instruction at 0x%x is not implemented!\n" CURRENT_STATE.PC, 
+				break;
+		}	
+	}
+	//tch(opcode)
+	else
+	{
+		switch(opcode){
+			case 0x08: //ADDI
+				IF_EX.B = ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF));
+				break;
+			case 0x09: //ADDIU
+				IF_EX.B = ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF));
+				break;
+			case 0x0A: //SLTI
+				if (( (int32_t)ID_IF.A - (int32_t)( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF))) < 0)
+				{
+					IF_EX.B = 0x1;	
+				}
+				else
+				{
+					IF_EX.B = 0x0;
+				}
+				break;
+			case 0x0C: //ANDI
+				IF_EX.B = ID_IF.A & (immediate & 0x0000FFFF);
+				break;
+			case 0x0D: //ORI
+				IF_EX.B = ID_IF.A | (immediate & 0x0000FFFF);
+				break;
+			case 0x0E: //XORI
+				IF_EX.B = ID_IF.A ^ (immediate & 0x0000FFFF);
+				break;
+			case 0x0F: //LUI
+				IF_EX.B = immediate << 16;
+				break;
+			case 0x20 //LB
+				data = mem_read_32(ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF)) );
+				IF_EX.B = ((data & 0x000000FF) & 0x80) > 0 ? (data | 0xFFFFFF00) : (data & 0x000000FF);
+				break;
+			case 0x21: //LH
+				data = mem_read_32(ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF)) );
+				IF_EX.B = ((data & 0x0000FFFF) & 0x8000) > 0 ? (data | 0xFFFF0000) : (data & 0x0000FFFF);
+				break;
+			case 0x23: //LW
+				IF_EX.B = mem_read_32(ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF)) );
+				break;
+			case 0x28: //SB
+				addr = ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF));
+				data = mem_read_32(addr);
+				data = (data & 0xFFFFFF00) | (ID_IF.B & 0x000000FF);
+				mem_write_32(addr,data);
+				break;
+			case 0x29: //SH
+				addr = ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF));
+				data = mem_read_32(addr);
+				data = (data & 0xFFFF0000) | (ID_IF.B & 0x0000FFFF);
+				mem_write_32(addr,data);
+				break;
+			case 0x2B: //SW
+				addr = ID_IF.A + ( (immediate & 0x8000) > 0 ? (immediate | 0xFFFF0000) : (immediate & 0x0000FFFF));
+				mem_write_32(addr, ID_IF.B);
+				break;
+			default:
+				printf("Instruction at 0x%x is not implemented!\n", CURRENT_STATE.PC);
+				break;
+				
 >>>>>>> a619aeea459ca6f1b98bf5666543e111d8d300e0
 }
 

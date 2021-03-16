@@ -650,12 +650,8 @@ if(opcode == 0x00){
 				output = a | (immediate & 0x0000FFFF);
 				break;
 		}
-<<<<<<< HEAD
 	}
-=======
 	//passing through the pipelined, storing all values in the temporary registers
-	ID_EX.IR = IF_ID.IR
->>>>>>> d91be91010881102626e0c4391424ae5cb252b47
 	EX_MEM.IR = instruction;
 	EX_MEM.B = b;
 	EX_MEM.ALUOutput = output;

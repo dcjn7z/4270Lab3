@@ -337,6 +337,7 @@ void WB()
 	output = MEM_WB.ALUOutput;
 	lmd = MEM_WB.LMD;
 	
+	
 	if(opcode == 0x00){
 		switch(function){
 			case 0x00: //SLL
@@ -481,7 +482,7 @@ void EX()
 	function = instruction & 0x0000003F;
 	sa = (instruction & 0x000007C0) >> 6;
 	uint64_t product, p1, p2;
-
+	
 if(opcode == 0x00){
 		switch(function){
 			case 0x00: //SLL
@@ -528,26 +529,26 @@ if(opcode == 0x00){
 					p2 = 0x00000000FFFFFFFF & b;
 				}
 				product = p1 * p2;
-				NEXT_STATE.LO = (product & 0X00000000FFFFFFFF);
-				NEXT_STATE.HI = (product & 0XFFFFFFFF00000000)>>32;
+				EX_MEM.ALUOutput = (product & 0X00000000FFFFFFFF);
+				EX_MEM.ALUOutput2 = (product & 0XFFFFFFFF00000000)>>32;
 				break;
 			case 0x19: //MULTU
 				product = (uint64_t)a * (uint64_t)b;
-				NEXT_STATE.LO = (product & 0X00000000FFFFFFFF);
-				NEXT_STATE.HI = (product & 0XFFFFFFFF00000000)>>32;
+				EX_MEM.ALUOutput = (product & 0X00000000FFFFFFFF);
+				EX_MEM.ALUOutput2 = (product & 0XFFFFFFFF00000000)>>32;
 				break;
 			case 0x1A: //DIV 
 				if(b != 0)
 				{
-					NEXT_STATE.LO = (int32_t)a / (int32_t)b;
-					NEXT_STATE.HI = (int32_t)a % (int32_t)b;
+					EX_MEM.ALUOutput = (int32_t)a / (int32_t)b;
+					EX_MEM.ALUOutput2 = (int32_t)a % (int32_t)b;
 				}
 				break;
 			case 0x1B: //DIVU
 				if(b != 0)
 				{
-					NEXT_STATE.LO = a / b;
-					NEXT_STATE.HI = a % b;
+					EX_MEM.ALUOutput = a / b;
+					EX_MEM.ALUOutput2 = a % b;
 				}
 				break;
 			case 0x20: //ADD
@@ -616,7 +617,8 @@ if(opcode == 0x00){
 				printf("Instruction at 0x%x is not implemented!\n", CURRENT_STATE.PC);
 				break;
 		}
-
+	//passing through the pipelined, storing all values in the temporary registers
+	ID_EX.IR = IF_ID.IR
 	EX_MEM.IR = instruction;
 	EX_MEM.B = b;
 	EX_MEM.ALUOutput = output;

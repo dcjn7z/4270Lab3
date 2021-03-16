@@ -326,6 +326,8 @@ void handle_pipeline()
 /************************************************************/
 void WB()
 {
+	if (CURRENT_STATE.PC < 4194320){
+		return;}
 	
 	uint32_t instruction, opcode, function, rt, rd, output, lmd;
 	
@@ -387,8 +389,17 @@ void WB()
 				break;
 			case 0x2A: //SLT
 				NEXT_STATE.REGS[rd] = output;
-			default:
-				printf("Instruction at 0x%x is not implemented!\n", CURRENT_STATE.PC);
+			case 0x24: //AND
+				NEXT_STATE.REGS[rd] = output;
+				break;
+			case 0x25: //OR
+				NEXT_STATE.REGS[rd] = output;
+				break;
+			case 0x26: //XOR
+				NEXT_STATE.REGS[rd] = output;
+				break;
+			case 0x27: //NOR
+				NEXT_STATE.REGS[rd] = output;
 				break;
 		}
 	}
@@ -414,15 +425,20 @@ void WB()
 				break;
 			case 0x23: //LW
 				NEXT_STATE.REGS[rt] = lmd;
-			default:
-				// put more things here
-				printf("Instruction at 0x%x is not implemented!\n", CURRENT_STATE.PC);
+			case 0x0E: //XORI
+				NEXT_STATE.REGS[rt] = output;
+				break;
+			case 0x0C: //ANDI
+				NEXT_STATE.REGS[rt] = output;
+				break;
+			case 0x0D: //ORI
+				NEXT_STATE.REGS[rt] = output;
 				break;
 		}
 	}
 	
 	INSTRUCTION_COUNT++;
-	
+	//show_pipeline();
 }
 
 /************************************************************/
@@ -430,6 +446,9 @@ void WB()
 /************************************************************/
 void MEM()
 {
+	if (CURRENT_STATE.PC < 4194316){
+		return;}
+
 	uint32_t instruction, opcode, b, alu, output;
 	instruction = EX_MEM.IR;
 	opcode = (instruction & 0xFC000000) >> 26;
@@ -456,15 +475,12 @@ void MEM()
 			case 0x2B: //SW
 				mem_write_32(alu,b);				
 				break;
-			default:
-				// put more things here
-				printf("Instruction at 0x%x is not implemented!\n", CURRENT_STATE.PC);
-				break;
 		}
 
 	MEM_WB.IR = instruction;
 	MEM_WB.ALUOutput = EX_MEM.ALUOutput;
 	MEM_WB.LMD = output;
+	//show_pipeline();
 }
 
 /************************************************************/
@@ -472,14 +488,17 @@ void MEM()
 /************************************************************/
 void EX()
 {
+	if (CURRENT_STATE.PC < 4194312){
+		return;}
 
-	uint32_t instruction, immediate, opcode, function, output, sa;
+	uint32_t instruction, a, b, immediate, opcode, function, output, sa;
 	instruction = IF_EX.IR;
 	a = IF_EX.A;
 	b = IF_EX.B;
 	immediate = IF_EX.imm;
 	opcode = (instruction & 0xFC000000) >> 26;
 	function = instruction & 0x0000003F;
+	output = 0;
 	sa = (instruction & 0x000007C0) >> 6;
 	uint64_t product, p1, p2;
 	
@@ -571,8 +590,17 @@ if(opcode == 0x00){
 					output = 0x0;
 				}
 				break;
-			default:
-				printf("Instruction at 0x%x is not implemented!\n", CURRENT_STATE.PC);
+			case 0x24: //AND
+				output = a & b;
+				break;
+			case 0x25: //OR
+				output = a | b;
+				break;
+			case 0x26: //XOR
+				output = a ^ b;
+				break;
+			case 0x27: //NOR
+				output = ~(a | b);
 				break;
 		}
 	}
@@ -595,33 +623,43 @@ if(opcode == 0x00){
 				output = immediate << 16;
 				break;
 			case 0x20: //LB
-				output = a + imm;
+				output = a + immediate;
 				break;
 			case 0x21: //LH
-				output = a + imm;
+				output = a + immediate;
 				break;
 			case 0x23: //LW
-				output = a + imm;
+				output = a + immediate;
 				break;
 			case 0x28: //SB
-				output = a + imm;				
+				output = a + immediate;				
 				break;
 			case 0x29: //SH
-				output = a + imm;
+				output = a + immediate;
 				break;
 			case 0x2B: //SW
-				output = a + imm;
+				output = a + immediate;
 				break;
-			default:
-				// put more things here
-				printf("Instruction at 0x%x is not implemented!\n", CURRENT_STATE.PC);
+			case 0x0E: //XORI
+				output = a ^ (immediate & 0x0000FFFF);
+				break;
+			case 0x0C: //ANDI
+				output = a & (immediate & 0x0000FFFF);
+				break;
+			case 0x0D: //ORI
+				output = a | (immediate & 0x0000FFFF);
 				break;
 		}
+<<<<<<< HEAD
+	}
+=======
 	//passing through the pipelined, storing all values in the temporary registers
 	ID_EX.IR = IF_ID.IR
+>>>>>>> d91be91010881102626e0c4391424ae5cb252b47
 	EX_MEM.IR = instruction;
 	EX_MEM.B = b;
 	EX_MEM.ALUOutput = output;
+	//show_pipeline();
 }
 
 /************************************************************/
@@ -629,6 +667,8 @@ if(opcode == 0x00){
 /************************************************************/
 void ID()
 {
+	if (CURRENT_STATE.PC < 4194308){
+		return;}
 	uint32_t instruction, rs, rt, immediate;
 	instruction = ID_IF.IR;
 	
@@ -637,15 +677,16 @@ void ID()
 	immediate = instruction & 0x0000FFFF;
 	
 	
-	if ((immed & 0x00008000)>>15 == 0x1)
+	if ((immediate & 0x00008000)>>15 == 0x1)
 	{
-		immed = immed + 0xFFFF0000;
+		immediate = immediate + 0xFFFF0000;
 	}
 	
 	IF_EX.A=CURRENT_STATE.REGS[rs];
 	IF_EX.B=CURRENT_STATE.REGS[rt];
 	IF_EX.IR = instruction;
 	IF_EX.imm = immediate;
+	//show_pipeline();
 }
 
 /************************************************************/
@@ -655,6 +696,8 @@ void IF()
 {
 	ID_IF.IR = mem_read_32(CURRENT_STATE.PC);
 	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+	ID_IF.PC = NEXT_STATE.PC;
+	show_pipeline();
 }
 
 
@@ -674,7 +717,7 @@ void initialize() {
 void print_program(){
 	uint32_t instruction, opcode, function, rs, rt, rd, sa, immediate, target;
 	
-	instruction = mem_read_32(CURRENT.STATE.PC);
+	instruction = mem_read_32(CURRENT_STATE.PC);
 	
 	opcode = (instruction & 0xFC000000) >> 26;
 	function = instruction & 0x0000003F;
@@ -686,7 +729,15 @@ void print_program(){
 	target = instruction & 0x03FFFFFF;
 	int i=0;
 	
-	while (function != 0x0C){ 
+	while (function != 0x0C || opcode !=0x00){
+		opcode = (instruction & 0xFC000000) >> 26;
+		function = instruction & 0x0000003F;
+		rs = (instruction & 0x03E00000) >> 21;
+		rt = (instruction & 0x001F0000) >> 16;
+		rd = (instruction & 0x0000F800) >> 11;
+		sa = (instruction & 0x000007C0) >> 6;
+		immediate = instruction & 0x0000FFFF;
+		target = instruction & 0x03FFFFFF;
 	if(opcode == 0x00){
 		/*R format instructions here*/
 		
@@ -781,10 +832,10 @@ void print_program(){
 				}
 				break;
 			case 0x02:
-				printf("J 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				printf("J 0x%x\n", (CURRENT_STATE.PC & 0xF0000000) | (target<<2));
 				break;
 			case 0x03:
-				printf("JAL 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				printf("JAL 0x%x\n", (CURRENT_STATE.PC & 0xF0000000) | (target<<2));
 				break;
 			case 0x04:
 				printf("BEQ $r%u, $r%u, 0x%x\n", rs, rt, immediate<<2);
@@ -843,9 +894,9 @@ void print_program(){
 		}
 	}
 	i++;
-	instruction = mem_read_32(CURRENT.STATE.PC + (4*i));
+	instruction = mem_read_32(CURRENT_STATE.PC + (4*i));
+	
 	}
-	printf("SYSCALL\n");
 }
 
 /************************************************************/
@@ -856,8 +907,10 @@ void show_pipeline(){
 	
 	char if_id[64];
 	char id_ex[64];
+	char *string1 = if_id;
+	char *string2 = id_ex;
 		
-	instruction = mem_read_32(ID_IF.IR);
+	instruction = ID_IF.IR;
 	opcode = (instruction & 0xFC000000) >> 26;
 	function = instruction & 0x0000003F;
 	rs = (instruction & 0x03E00000) >> 21;
@@ -961,10 +1014,10 @@ void show_pipeline(){
 				}
 				break;
 			case 0x02:
-				snprintf(if_id,64,"J 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				snprintf(if_id,64,"J 0x%x\n", (CURRENT_STATE.PC & 0xF0000000) | (target<<2));
 				break;
 			case 0x03:
-				snprintf(if_id,64,"JAL 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				snprintf(if_id,64,"JAL 0x%x\n", (CURRENT_STATE.PC & 0xF0000000) | (target<<2));
 				break;
 			case 0x04:
 				snprintf(if_id,64,"BEQ $r%u, $r%u, 0x%x\n", rs, rt, immediate<<2);
@@ -1023,7 +1076,7 @@ void show_pipeline(){
 		}
 	}
 	
-	instruction = mem_read_32(IF_EX.IR);
+	instruction = IF_EX.IR;
 	opcode = (instruction & 0xFC000000) >> 26;
 	function = instruction & 0x0000003F;
 	rs = (instruction & 0x03E00000) >> 21;
@@ -1127,10 +1180,10 @@ void show_pipeline(){
 				}
 				break;
 			case 0x02:
-				snprintf(id_ex,64,"J 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				snprintf(id_ex,64,"J 0x%x\n", (CURRENT_STATE.PC & 0xF0000000) | (target<<2));
 				break;
 			case 0x03:
-				snprintf(id_ex,64,"JAL 0x%x\n", (addr & 0xF0000000) | (target<<2));
+				snprintf(id_ex,64,"JAL 0x%x\n", (CURRENT_STATE.PC & 0xF0000000) | (target<<2));
 				break;
 			case 0x04:
 				snprintf(id_ex,64,"BEQ $r%u, $r%u, 0x%x\n", rs, rt, immediate<<2);
@@ -1188,30 +1241,31 @@ void show_pipeline(){
 				break;
 		}
 	}
-	printf("CURRENT PC:\t%d\n",CURRENT_STATE.PC);
-	printf("IF/ID.IR\t%d\t%s\n",ID_IF.IR,if_id);
-	printf("IF/ID.PC\t%d\t%s\n",ID_IF.PC);
+	printf("************************************************************\n");
+	printf("CURRENT PC:\t\t0x%x\n",CURRENT_STATE.PC);
+	printf("IF/ID.IR\t\t0x%x\t%s",ID_IF.IR,string1);
+	printf("IF/ID.PC\t\t0x%x\n",ID_IF.PC);
 	printf("\n");
-	printf("ID/EX.IR\t%d\t%s\n",IF_EX.IR,id_ex);
-	printf("ID/EX.A\t%d\n",IF_EX.A);
-	printf("ID/EX.B\t%d\n",IF_EX.B);
-	printf("ID/EX.imm\t%d\n",IF_EX.imm);
+	printf("ID/EX.IR\t\t0x%x\t%s",IF_EX.IR,string2);
+	printf("ID/EX.A\t\t\t0x%x\n",IF_EX.A);
+	printf("ID/EX.B\t\t\t0x%x\n",IF_EX.B);
+	printf("ID/EX.imm\t\t0x%x\n",IF_EX.imm);
 	printf("\n");
-	printf("EX/MEM.IR\t%d\n",EX_MEM.IR);
-	printf("EX/MEM.A\t%d\n",EX_MEM.A);
-	printf("EX/MEM.B\t%d\n",EX_MEM.B);
-	printf("EX/MEM.ALUOutput\t%d\n",EX_MEM.ALUOutput);
+	printf("EX/MEM.IR\t\t0x%x\n",EX_MEM.IR);
+	printf("EX/MEM.A\t\t0x%x\n",EX_MEM.A);
+	printf("EX/MEM.B\t\t0x%x\n",EX_MEM.B);
+	printf("EX/MEM.ALUOutput\t0x%x\n",EX_MEM.ALUOutput);
 	printf("\n");
-	printf("MEM/WB.IR\t%d\n",MEM_WB.IR);
-	printf("MEM/WB.IR\t%d\n",MEM_WB.ALUOutput);
-	printf("MEM/WB.LMD\t%d\n",MEM_WB.LMD);
+	printf("MEM/WB.IR\t\t0x%x\n",MEM_WB.IR);
+	printf("MEM/WB.IR\t\t0x%x\n",MEM_WB.ALUOutput);
+	printf("MEM/WB.LMD\t\t0x%x\n",MEM_WB.LMD);
 	printf("\n");
 }
 
 /***************************************************************/
 /* main                                                                                                                                   */
 /***************************************************************/
-int main(int argc, char *argv[]) {                              
+int main(int argc, char *argv[]) {                             
 	printf("\n**************************\n");
 	printf("Welcome to MU-MIPS SIM...\n");
 	printf("**************************\n\n");

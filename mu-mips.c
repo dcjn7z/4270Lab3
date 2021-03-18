@@ -352,6 +352,9 @@ void WB()
 				NEXT_STATE.REGS[rd] = output;
 				break;
 			case 0x0C: //SYSCALL
+				if(CURRENT_STATE.REGS[2] == 0xa){
+					RUN_FLAG = FALSE;
+				}
 				break;
 			case 0x10: //MFHI
 				NEXT_STATE.REGS[rd] = output;
@@ -436,8 +439,6 @@ void WB()
 				break;
 		}
 	}
-	
-	INSTRUCTION_COUNT++;
 	//show_pipeline();
 }
 
@@ -517,11 +518,6 @@ if(opcode == 0x00){
 				}
 				else{
 					output = b >> sa;
-				}
-				break;
-			case 0x0C: //SYSCALL
-				if(CURRENT_STATE.REGS[2] == 0xa){
-					RUN_FLAG = FALSE;
 				}
 				break;
 			case 0x10: //MFHI
@@ -663,9 +659,9 @@ if(opcode == 0x00){
 /************************************************************/
 void ID()
 {
+	uint32_t instruction, rs, rt, immediate;
 	if (CURRENT_STATE.PC < 4194308){
 		return;}
-	uint32_t instruction, rs, rt, immediate;
 	instruction = ID_IF.IR;
 	
 	rs = (instruction & 0x03E00000) >> 21;
@@ -690,9 +686,13 @@ void ID()
 /************************************************************/
 void IF()
 {
+	if (ID_IF.IR ==	0xc){
+		show_pipeline();
+		return;}
 	ID_IF.IR = mem_read_32(CURRENT_STATE.PC);
 	NEXT_STATE.PC = CURRENT_STATE.PC + 4;
 	ID_IF.PC = NEXT_STATE.PC;
+	INSTRUCTION_COUNT++;
 	show_pipeline();
 }
 
@@ -1253,7 +1253,7 @@ void show_pipeline(){
 	printf("EX/MEM.ALUOutput\t0x%x\n",EX_MEM.ALUOutput);
 	printf("\n");
 	printf("MEM/WB.IR\t\t0x%x\n",MEM_WB.IR);
-	printf("MEM/WB.IR\t\t0x%x\n",MEM_WB.ALUOutput);
+	printf("MEM/WB.ALUOutput\t0x%x\n",MEM_WB.ALUOutput);
 	printf("MEM/WB.LMD\t\t0x%x\n",MEM_WB.LMD);
 	printf("\n");
 }

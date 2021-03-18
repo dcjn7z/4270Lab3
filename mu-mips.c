@@ -339,8 +339,7 @@ void WB()
 	output = MEM_WB.ALUOutput;
 	lmd = MEM_WB.LMD;
 	
-	
-	if(opcode == 0x00){
+	if(opcode == 0){
 		switch(function){
 			case 0x00: //SLL
 				NEXT_STATE.REGS[rd] = output;
@@ -406,8 +405,9 @@ void WB()
 				break;
 		}
 	}
-	else{
+	else {
 		switch(opcode){
+			
 			case 0x08: //ADDI
 				NEXT_STATE.REGS[rt] = output;
 				break;
@@ -428,6 +428,7 @@ void WB()
 				break;
 			case 0x23: //LW
 				NEXT_STATE.REGS[rt] = lmd;
+				break;
 			case 0x0E: //XORI
 				NEXT_STATE.REGS[rt] = output;
 				break;
@@ -438,6 +439,7 @@ void WB()
 				NEXT_STATE.REGS[rt] = output;
 				break;
 		}
+		
 	}
 	//show_pipeline();
 }
